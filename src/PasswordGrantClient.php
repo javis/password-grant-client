@@ -1,12 +1,13 @@
 <?php
+
 namespace Javis\OAuth2;
 
 use League\OAuth2\Client\Provider\Exception\IdentityProviderException;
-use League\OAuth2\Client\Token\AccessToken;
 use League\OAuth2\Client\Provider\GenericProvider;
+use League\OAuth2\Client\Token\AccessToken;
 
 /**
- * [PasswordGrantClient description]
+ * [PasswordGrantClient description].
  *
  * [
  *    'clientId'                => 'demoapp',    // The client ID assigned to you by the provider
@@ -17,10 +18,8 @@ use League\OAuth2\Client\Provider\GenericProvider;
  *    'urlResourceOwnerDetails' => 'http://brentertainment.com/oauth2/lockdin/resource'
  * ]
  */
-
 class PasswordGrantClient
 {
-
     protected $provider;
 
     public function __construct(GenericProvider $provider)
@@ -29,17 +28,47 @@ class PasswordGrantClient
     }
 
     /**
-     * request access token for a specific user from endpoint
-     * @param  [type] $username [description]
-     * @param  [type] $password [description]
-     * @return [type]           [description]
+     * retrieves from endpoint, session or refreshes the Token
+     * for a given user.
+     *
+     * @param [type] $username [description]
+     * @param [type] $password [description]
+     *
+     * @return AccessToken
      */
-    function requestAccessToken($username, $password)
+    public function getAccessToken($username, $password)
+    {
+        // get token from session
+        if ($token = $this->retrievePersistedAccessToken()) {
+            try {
+                $token = $this->refreshTokenIfNecessary($token);
+            } catch (IdentityProviderException $e) {
+                $this->removePersistedToken();
+                $token = false;
+            }
+        }
+
+        if (!$token) {
+            $token = $this->requestAccessToken($username, $password);
+        }
+
+        return $token;
+    }
+
+    /**
+     * request access token for a specific user from endpoint.
+     *
+     * @param [type] $username [description]
+     * @param [type] $password [description]
+     *
+     * @return [type] [description]
+     */
+    public function requestAccessToken($username, $password)
     {
         // Try to get an access token using the resource owner password credentials grant.
         $token = $this->provider->getAccessToken('password', [
             'username' => $username,
-            'password' => $password
+            'password' => $password,
         ]);
 
         // save to session
@@ -49,11 +78,13 @@ class PasswordGrantClient
     }
 
     /**
-     * attempt to refresh a given token
-     * @param  [type] $token [description]
-     * @return [type]        [description]
+     * attempt to refresh a given token.
+     *
+     * @param AccessToken $token [description]
+     *
+     * @return AccessToken [description]
      */
-    function refreshAccessToken(AccessToken $token)
+    public function refreshAccessToken(AccessToken $token)
     {
         $token = $this->provider->getAccessToken('refresh_token', [
             'refresh_token' => $token->getRefreshToken(),
@@ -68,13 +99,13 @@ class PasswordGrantClient
 
     protected function getPersistingKey()
     {
-        return 'token_'. md5($this->provider->getBaseAccessTokenUrl([]));
+        return 'token_'.md5($this->provider->getBaseAccessTokenUrl([]));
     }
 
     /**
-     * saves token in session
-     * @param  AccessToken $token
-     * @return null
+     * saves token in session.
+     *
+     * @param AccessToken $token
      */
     protected function persistAccessToken(AccessToken $token)
     {
@@ -83,15 +114,17 @@ class PasswordGrantClient
     }
 
     /**
-     * [retrievePersistedAccessToken description]
+     * [retrievePersistedAccessToken description].
+     *
      * @return AccessToken
      */
     protected function retrievePersistedAccessToken()
     {
         $key = $this->getPersistingKey();
-        if (!empty($_SESSION[$key])){
-            return new AccessToken(json_decode($_SESSION[$key]));
+        if (!empty($_SESSION[$key])) {
+            return new AccessToken(json_decode($_SESSION[$key], true));
         }
+
         return false;
     }
 
@@ -100,40 +133,12 @@ class PasswordGrantClient
         unset($_SESSION[$this->getPersistingKey()]);
     }
 
-
-
-    /**
-     * retrieves from endpoint, session or refreshes the Token
-     * for a given user
-     * @param  [type] $username [description]
-     * @param  [type] $password [description]
-     * @return AccessToken
-     */
-    public function getAccessToken($username, $password)
-    {
-        // get token from session
-        if ($token = $this->retrievePersistedAccessToken()){
-            try {
-                $token = $this->refreshTokenIfNecessary($token);
-            } catch (IdentityProviderException $e) {
-                $this->removePersistedToken();
-                $token = false;
-            }
-        }
-
-        if (!$token){
-            $token =  $this->requestAccessToken($username, $password);
-        }
-
-        return $token;
-    }
-
     /**
      * @param AccessToken $token
      *
-     * @return AccessToken
-     *
      * @throws IdentityProviderException
+     *
+     * @return AccessToken
      */
     protected function refreshTokenIfNecessary(AccessToken $token)
     {
@@ -143,6 +148,4 @@ class PasswordGrantClient
 
         return $token;
     }
-
-
 }
