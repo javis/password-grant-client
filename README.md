@@ -42,3 +42,9 @@ operations before returning it.
 $return = $client->getAccessToken('username', 'password');
 echo $token->getToken();
 ```
+
+### Forgetting stored token
+
+```php
+$client->forgetToken();
+```

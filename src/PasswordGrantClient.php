@@ -56,6 +56,14 @@ class PasswordGrantClient
     }
 
     /**
+     * forgets stored token.
+     */
+    public function forgetToken()
+    {
+        $this->removePersistedToken();
+    }
+
+    /**
      * request access token for a specific user from endpoint.
      *
      * @param [type] $username [description]
