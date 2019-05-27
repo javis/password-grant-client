@@ -47,7 +47,7 @@ class PasswordGrantClientTest extends TestCase
         $this->assertEquals($token, $return);
 
         // test token persisted
-        $key = 'token_'.md5('test');
+        $key = 'token_'.md5('test'.'username');
 
         $persisted = json_decode($_SESSION[$key], true);
 
@@ -60,7 +60,7 @@ class PasswordGrantClientTest extends TestCase
         $provider = Mockery::mock(GenericProvider::class);
 
         // stores a token in session
-        $key = 'token_'.md5('test');
+        $key = 'token_'.md5('test'.'username');
 
         $_SESSION[$key] = json_encode([
             'access_token' => 'token_value',
@@ -84,7 +84,7 @@ class PasswordGrantClientTest extends TestCase
         $provider->shouldReceive('getBaseAccessTokenUrl')->with([])->andReturn('test');
 
         // session has an expired token
-        $key = 'token_'.md5('test');
+        $key = 'token_'.md5('test'.'username');
 
         $token_data = [
             'access_token' => 'token_value',
