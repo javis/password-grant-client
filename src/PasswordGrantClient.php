@@ -35,7 +35,7 @@ class PasswordGrantClient
             try {
                 $token = $this->refreshTokenIfNecessary($username, $token);
             } catch (IdentityProviderException $e) {
-                $this->removePersistedToken();
+                $this->removePersistedToken($username);
                 $token = false;
             }
         }
@@ -49,10 +49,12 @@ class PasswordGrantClient
 
     /**
      * forgets stored token.
+     *
+     * @param string $username
      */
-    public function forgetToken()
+    public function forgetToken($username)
     {
-        $this->removePersistedToken();
+        $this->removePersistedToken($username);
     }
 
     /**

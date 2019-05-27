@@ -76,6 +76,31 @@ class PasswordGrantClientTest extends TestCase
         $this->assertEquals('token_value', $token->getToken());
     }
 
+    public function testDeleteToken()
+    {
+        // Create a mock
+        $provider = Mockery::mock(GenericProvider::class);
+
+        $provider->shouldReceive('getBaseAccessTokenUrl')->with([])->andReturn('test');
+
+        // session has an expired token
+        $key = 'token_'.md5('test'.'username');
+
+        $token_data = [
+            'access_token' => 'token_value',
+            'refresh_token' => 'refresh_value',
+            'expires' => time() - 3600, // expired one hour ago
+        ];
+
+        $_SESSION[$key] = json_encode($token_data);
+
+        $client = new PasswordGrantClient($provider);
+
+        $client->forgetToken('username');
+
+        $this->assertTrue(!isset($_SESSION[$key]));
+    }
+
     public function testRefreshToken()
     {
         // Create a mock
