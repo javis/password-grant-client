@@ -149,8 +149,16 @@ class PasswordGrantClient
      */
     protected function refreshTokenIfNecessary($username, AccessToken $token)
     {
-        if ($token->hasExpired() && $token->getRefreshToken()) {
-            $token = $this->refreshAccessToken($username, $token);
+        if ($token->hasExpired())
+        {
+            $this->forgetToken($username);            
+            if ($token->getRefreshToken()) 
+            {
+                $token = $this->refreshAccessToken($username, $token);
+            }
+            else{
+                $token = false;
+            }
         }
 
         return $token;
